@@ -27,6 +27,7 @@ Contains all API endpoints:
 """
 
 import json
+import os
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, Security
@@ -418,7 +419,8 @@ async def chat_completions(request: Request, request_data: ChatCompletionRequest
                                     else:
                                         debug_logger.discard_buffers()
                         
-                        return StreamingResponse(stream_wrapper(), media_type="text/event-stream")
+                        account_header = os.path.basename(account.id) if account and hasattr(account, "id") and account.id else "unknown"
+                        return StreamingResponse(stream_wrapper(), media_type="text/event-stream", headers={"X-Kiro-Account": account_header})
                     
                     else:
                         # Non-streaming mode
@@ -438,7 +440,8 @@ async def chat_completions(request: Request, request_data: ChatCompletionRequest
                         if debug_logger:
                             debug_logger.discard_buffers()
                         
-                        return JSONResponse(content=openai_response)
+                        account_header = os.path.basename(account.id) if account and hasattr(account, "id") and account.id else "unknown"
+                        return JSONResponse(content=openai_response, headers={"X-Kiro-Account": account_header})
                 
                 else:
                     # ERROR - classify and decide
@@ -719,7 +722,8 @@ async def chat_completions(request: Request, request_data: ChatCompletionRequest
                         else:
                             debug_logger.discard_buffers()
             
-            return StreamingResponse(stream_wrapper(), media_type="text/event-stream")
+            account_header = os.path.basename(account.id) if account and hasattr(account, "id") and account.id else "unknown"
+            return StreamingResponse(stream_wrapper(), media_type="text/event-stream", headers={"X-Kiro-Account": account_header})
         
         else:
             
@@ -743,7 +747,8 @@ async def chat_completions(request: Request, request_data: ChatCompletionRequest
             if debug_logger:
                 debug_logger.discard_buffers()
             
-            return JSONResponse(content=openai_response)
+            account_header = os.path.basename(account.id) if account and hasattr(account, "id") and account.id else "unknown"
+            return JSONResponse(content=openai_response, headers={"X-Kiro-Account": account_header})
     
     except HTTPException as e:
         await http_client.close()

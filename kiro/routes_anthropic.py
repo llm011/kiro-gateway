@@ -26,6 +26,7 @@ Reference: https://docs.anthropic.com/en/api/messages
 """
 
 import json
+import os
 from typing import Optional
 
 import httpx
@@ -486,12 +487,14 @@ async def messages(
                                     else:
                                         debug_logger.discard_buffers()
                         
+                        account_header = os.path.basename(account.id) if account and hasattr(account, "id") and account.id else "unknown"
                         return StreamingResponse(
                             stream_wrapper(),
                             media_type="text/event-stream",
                             headers={
                                 "Cache-Control": "no-cache",
                                 "Connection": "keep-alive",
+                                "X-Kiro-Account": account_header,
                             }
                         )
                     
@@ -513,7 +516,8 @@ async def messages(
                         if debug_logger:
                             debug_logger.discard_buffers()
                         
-                        return JSONResponse(content=anthropic_response)
+                        account_header = os.path.basename(account.id) if account and hasattr(account, "id") and account.id else "unknown"
+                        return JSONResponse(content=anthropic_response, headers={"X-Kiro-Account": account_header})
                 
                 else:
                     # ERROR - classify and decide
@@ -845,12 +849,14 @@ async def messages(
                         else:
                             debug_logger.discard_buffers()
             
+            account_header = os.path.basename(account.id) if account and hasattr(account, "id") and account.id else "unknown"
             return StreamingResponse(
                 stream_wrapper(),
                 media_type="text/event-stream",
                 headers={
                     "Cache-Control": "no-cache",
                     "Connection": "keep-alive",
+                    "X-Kiro-Account": account_header,
                 }
             )
         
@@ -873,7 +879,8 @@ async def messages(
             if debug_logger:
                 debug_logger.discard_buffers()
             
-            return JSONResponse(content=anthropic_response)
+            account_header = os.path.basename(account.id) if account and hasattr(account, "id") and account.id else "unknown"
+            return JSONResponse(content=anthropic_response, headers={"X-Kiro-Account": account_header})
     
     except HTTPException as e:
         await http_client.close()
